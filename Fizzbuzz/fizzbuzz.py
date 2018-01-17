@@ -28,7 +28,17 @@ def main():
 	# if the number is neither divisible by 3 or 5, print the sum of all the previous numbers
 	# which have been printed, starting with zero. (newline) 
 
-	# your code goes here.
+	n = 0
+	for i in range(start, end+1):
+		s = ""
+		if (i%3 == 0):
+			s = s+"Fizz"
+		if (i%5 == 0):
+			s = s+"Buzz"
+		if (i%3 != 0 and i%5 != 0):
+			s = str(n)
+			n = n+i
+		print s
 
 # create a main function in Python
 if __name__ == "__main__":
