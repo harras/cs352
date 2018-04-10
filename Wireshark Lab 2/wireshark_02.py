@@ -41,8 +41,22 @@ def main():
         # this converts the packet arrival time in unix timestamp format
         # to a printable-string
         time_string = datetime.datetime.utcfromtimestamp(timestamp)
-        # your code goes here ...
-    
+        
+        eth = dpkt.ethernet.Ethernet(packet)
+        if eth.type != dpkt.ethernet.ETH_TYPE_IP:
+            continue
+        ip = eth.data
+
+        if ip.p==dpkt.ip.IP_PROTO_TCP:
+            tcp = ip.data
+            print "tcp packet"
+
+        elif ip.p==dpkt.ip.IP_PROTO_UDP:
+            udp = ip.data
+            print "udp packet"
+
+        else:
+            print "Bad packet"    
 
 # execute a main function in Python
 if __name__ == "__main__":
