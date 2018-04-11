@@ -45,6 +45,20 @@ def port_insert(object, list):
             port_insert.count += 1
 
 
+def search_for_scans(srch_list, rslt_list, w, n):
+    k = 0
+    while k < len(srch_list)-2:
+        i = k
+        j = i+1
+        while (i < len(srch_list)-2 and j < len(srch_list)-1 and \
+            srch_list[i].dport+w>=srch_list[j].dport):
+            i = j
+            j = j+1
+        if(j-k>=n):
+            rslt_list.append(srch_list[k:j+1])
+        k = j+1
+
+
 def main():
     # parse all the arguments to the client
     parser = argparse.ArgumentParser(description='CS 352 Wireshark Assignment 2')
@@ -111,7 +125,11 @@ def main():
     print "# of udp port packets:\t" + str(len(udp_port_list))
     #print count
     
+    tcp_scans = []
+    
+    search_for_scans(tcp_port_list, tcp_scans, W_s, N_s)
 
+    print len(tcp_scans)
 
 # execute a main function in Python
 if __name__ == "__main__":
