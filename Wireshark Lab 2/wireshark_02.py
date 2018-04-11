@@ -14,7 +14,36 @@ def inet_to_str(inet):
     except ValueError:
         return socket.inet_ntop(socket.AF_INET6, inet)
 
-# add your own function/class/method defines here.
+
+# Custom helper function
+# Uses a packet tuple, where tuple[0] is the timestamp of the packet, and tuple[1] is the object
+def time_insert(tuple, list):
+    if len(list) == 0 or tuple[0] >= list[len(list)-1][0]:
+        list.append(tuple)
+    else:
+        for i in range(len(list)):
+            if tuple[0] <= list[i][0]:
+                list.insert(i, tuple)
+                break
+
+
+def port_insert(object, list):
+    flag = 0
+    global count
+    if len(list) == 0 or object.dport >= list[len(list)-1].dport:
+        list.append(object)
+    else:
+        for i in range(len(list)):
+            if object.dport <= list[i].dport:
+                list.insert(i, object)
+                flag = 1
+                break
+        if flag == 0:
+            print object.dport
+            print len(object.data)
+            print 
+            port_insert.count += 1
+
 
 def main():
     # parse all the arguments to the client
@@ -42,6 +71,7 @@ def main():
     udp_time_list = []
     udp_port_list = []
 
+    port_insert.count = 0
     count = 0
 
     for timestamp, packet in input_data:
@@ -72,34 +102,15 @@ def main():
             print "Bad packet"  
 
         count += 1
-
-    print len(tcp_time_list)
-    print len(tcp_port_list)
-    print len(udp_time_list)
-    print len(udp_port_list)
-    print count
     
-# Custom helper function
-# Uses a packet tuple, where tuple[0] is the timestamp of the packet, and tuple[1] is the object
-def time_insert(tuple, list):
-    if len(list) == 0 or tuple[0] >= list[len(list)-1][0]:
-        list.append(tuple)
-    else:
-        for i in range(len(list)):
-            if tuple[0] <= list[i][0] and len(tuple[1].data) > 0:
-                list.insert(i, tuple)
-                break
-            
-
-def port_insert(object, list):
-    if len(list) == 0 or object.dport >= list[len(list)-1].dport:
-        list.append(object)
-    else:
-        for i in range(len(list)):
-            if object.dport <= list[i].dport and len(object.data) > 0:
-                list.insert(i, object)
-                break
-
+    print "==========================="
+    print "pakcets skipped:\t" +  str(port_insert.count)
+    print "# of tcp time packets:\t" + str(len(tcp_time_list))
+    print "# of tcp port packets:\t" + str(len(tcp_port_list))
+    print "# of udp time packets:\t" + str(len(udp_time_list))
+    print "# of udp port packets:\t" + str(len(udp_port_list))
+    #print count
+    
 
 
 # execute a main function in Python
