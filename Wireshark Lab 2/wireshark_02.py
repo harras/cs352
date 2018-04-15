@@ -16,40 +16,52 @@ def inet_to_str(inet):
 
 
 # Custom helper function
-def insert_port_list(tuple, list):
-    i = 0
-    l = [tuple]
+def insert_list(tuple, list):
+    flag = 0
     if len(list) == 0:
-        list.append(l)
-    # If last entry is less than new entry, add new list...
-    elif list[len(list)-1][0][0].dport < tuple[0].dport:
-        list.append(l)
+        list.append(tuple)
+        flag = 1
+    elif list[len(list)-1][0].dport < tuple[0].dport:
+        list.append(tuple)
+        flag = 1
     else:
-        while(True):
-            if i >= len(list):
+        for i in range(len(list)):
+            if list[i][0].dport >= tuple[0].dport:
+                list.insert(i, tuple)
+                flag = 1
                 break
-            elif list[i][0][0].dport < tuple[0].dport:
-                i = i+1
-            elif list[i][0][0].dport == tuple[0].dport:
-                list[i].append(tuple)
-                break
-            elif list[i][0][0].dport > tuple[0].dport:
-                list.insert(i, l)
-            else:
-                print "FUCK"
+    if flag == 0:
+        print "insert_list: error"
 
-def print_ports(list):
-    for i in list:
+def insert_hash(tuple, hash):
+    l = [tuple]
+    flag = 0
+    if len(hash) == 0:
+        hash.append(l)
+        flag = 1
+    elif hash[len(hash)-1][0][0].dport < tuple[0].dport:
+        hash.append(l)
+        flag = 1
+    else:
+        for i in range(len(hash)):
+            if hash[i][0][0].dport == tuple[0].dport:
+                hash[i].append(tuple)
+                flag = 1
+                break
+            elif hash[i][0][0].dport > tuple[0].dport:
+                hash.insert(i, l)
+                flag =1
+                break
+    if flag == 0:
+        print "insert_hash: error"
+
+def count_hash(hash):
+    count = 0
+    for i in hash:
         for j in i:
-            print j[0].dport
+            count += 1
 
-def print_times(list):
-    for i in list:
-        print i[1]
-
-def print_port_hashes(list):
-    for i in list:
-        print i[0][0].dport
+    print count
 
 def main():
     # parse all the arguments to the client
@@ -72,10 +84,10 @@ def main():
 
     input_data = dpkt.pcap.Reader(open(file_name,'r'))
 
-    tcp_time_list = []
-    tcp_port_list = []
-    udp_time_list = []
-    udp_port_list = []
+    tcp_list = []
+    udp_list = []
+    tcp_hash = []
+    udp_hash = []
 
     for timestamp, packet in input_data:
         # this converts the packet arrival time in unix timestamp format
@@ -89,36 +101,24 @@ def main():
             continue
         ip = eth.data
 
+
         if ip.p==dpkt.ip.IP_PROTO_TCP:
             tcp = ip.data
-            #print tcp.dport
-            tcp_tuple = (tcp, time_string)
-            tcp_time_list.append(tcp_tuple)
-            insert_port_list(tcp_tuple, tcp_port_list)
-
+            tcp_tuple = (tcp, timestamp)
+            insert_list(tcp_tuple, tcp_list)
+            insert_hash(tcp_tuple, tcp_hash)
+            
         elif ip.p==dpkt.ip.IP_PROTO_UDP:
             udp = ip.data
-            #print udp.dport
-            udp_tuple = (udp, time_string)
-            udp_time_list.append(udp_tuple)
-            insert_port_list(udp_tuple, udp_port_list)
-
+            udp_tuple = (udp, timestamp)
+            insert_list(udp_tuple, udp_list)
+            insert_hash(udp_tuple, udp_hash)
             
         else:
             print "Bad packet"  
 
-    print_times(tcp_time_list)
-    print_ports(tcp_port_list)
-    print_times(udp_time_list)
-    print_ports(udp_port_list)
-    print len(tcp_port_list)
-    print len(tcp_time_list)
-    print len(udp_port_list)
-    print len(udp_time_list)
-    #print
-   # print_port_hashes(tcp_port_list)
-
-
+    count_hash(tcp_hash)
+    count_hash(udp_hash)
 
 # execute a main function in Python
 if __name__ == "__main__":
