@@ -55,13 +55,65 @@ def insert_hash(tuple, hash):
     if flag == 0:
         print "insert_hash: error"
 
-def count_hash(hash):
-    count = 0
-    for i in hash:
-        for j in i:
-            count += 1
 
-    print count
+
+def print_hash(hash):
+    for i in hash:
+        print "-----------"
+        for j in i:
+            print j[0].dport
+
+def print_hash_time(hash):
+    for i in hash:
+        print "-----------"
+        for j in i:
+            print j[1]
+
+
+def print_list(list):
+    for i in list:
+        print i[0].dport
+
+def detect_scans(list, w, n):
+    i = j = 0
+    dest_l = l = []
+    while(i < len(list)-2):
+        if list[i][0].dport+w>=list[i+1][0].dport:
+            j = i
+            while(j<len(list)-2):
+                if(list[j][0].dport+w<list[j+1][0].dport):
+                    break
+                else:
+                    j=j+1
+            l = list[i:j+1]
+            if(len(l)>=n):
+                dest_l.append(l)
+            i = j+1
+        else:
+            i = i+1
+
+    return dest_l
+
+def detect_probes(src_list, w, n):
+    i = j = 0
+    dest_l = l = []
+    for list in src_list:    
+        while(i < len(list)-2):
+            if list[i][1]+w>=list[i+1][1]:
+                j = i
+                while(j<len(list)-2):
+                    if(list[j][1]+w<list[j+1][1]):
+                        break
+                    else:
+                        j=j+1
+                l = list[i:j+1]
+                if(len(l)>=n):
+                    dest_l.append(l)
+                i = j+1
+            else:
+                i = i+1
+
+    return dest_l
 
 def main():
     # parse all the arguments to the client
@@ -88,6 +140,9 @@ def main():
     udp_list = []
     tcp_hash = []
     udp_hash = []
+
+    tcp_scans = []
+    udp_scans = []
 
     for timestamp, packet in input_data:
         # this converts the packet arrival time in unix timestamp format
@@ -117,9 +172,38 @@ def main():
         else:
             print "Bad packet"  
 
-    count_hash(tcp_hash)
-    count_hash(udp_hash)
-
+    tcp_scans = detect_scans(tcp_list, W_s, N_s)
+    tcp_probes = detect_probes(tcp_hash, W_p, N_p)
+    udp_scans = detect_scans(udp_list, W_s, N_s)
+    udp_probes = detect_probes(udp_list, W_p, W_p)
+   
+    print "CS 352 Wireshark (Part 2)"
+    print "Reports for TCP"
+    print "Found " + str(len(tcp_probes)) + " probes"
+    for i in tcp_probes:
+        print "Probe: [" + str(len(i)) + " packets]"
+        for j in i:
+            print "\tPacket [Timestamp " + str(datetime.datetime.utcfromtimestamp(j[1])) + \
+                ", Port: " + str(j[0].dport) + "]"
+    print "Found " + str(len(tcp_scans)) + " scans"
+    for i in tcp_scans:
+        print "Scan: [" + str(len(i)) + " packets]"
+        for j in i:
+            print "\tPacket [Timestamp " + str(datetime.datetime.utcfromtimestamp(j[1])) + \
+                ", Port: " + str(j[0].dport) + "]"
+    print "Reports for UDP"
+    print "Found " + str(len(udp_probes)) + " probes"
+    for i in udp_probes:
+        print "Probe: [" + str(len(i)) + " packets]"
+        for j in i:
+            print "\tPacket [Timestamp " + str(datetime.datetime.utcfromtimestamp(j[1])) + \
+                ", Port: " + str(j[0].dport) + "]"
+    print "Found " + str(len(udp_scans)) + " scans"
+    for i in udp_scans:
+        print "Scan: [" + str(len(i)) + " packets]"
+        for j in i:
+            print "\tPacket [Timestamp " + str(datetime.datetime.utcfromtimestamp(j[1])) + \
+                ", Port: " + str(j[0].dport) + "]"
 # execute a main function in Python
 if __name__ == "__main__":
     main()
