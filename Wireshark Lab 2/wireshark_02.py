@@ -16,48 +16,40 @@ def inet_to_str(inet):
 
 
 # Custom helper function
-# Uses a packet tuple, where tuple[0] is the timestamp of the packet, and tuple[1] is the object
-def time_insert(tuple, list):
-    if len(list) == 0 or tuple[0] >= list[len(list)-1][0]:
-        list.append(tuple)
+def insert_port_list(tuple, list):
+    i = 0
+    l = [tuple]
+    if len(list) == 0:
+        list.append(l)
+    # If last entry is less than new entry, add new list...
+    elif list[len(list)-1][0][0].dport < tuple[0].dport:
+        list.append(l)
     else:
-        for i in range(len(list)):
-            if tuple[0] <= list[i][0]:
-                list.insert(i, tuple)
+        while(True):
+            if i >= len(list):
                 break
-
-
-def port_insert(object, list):
-    flag = 0
-    global count
-    if len(list) == 0 or object.dport >= list[len(list)-1].dport:
-        list.append(object)
-    else:
-        for i in range(len(list)):
-            if object.dport <= list[i].dport:
-                list.insert(i, object)
-                flag = 1
+            elif list[i][0][0].dport < tuple[0].dport:
+                i = i+1
+            elif list[i][0][0].dport == tuple[0].dport:
+                list[i].append(tuple)
                 break
-        if flag == 0:
-            print object.dport
-            print len(object.data)
-            print 
-            port_insert.count += 1
+            elif list[i][0][0].dport > tuple[0].dport:
+                list.insert(i, l)
+            else:
+                print "FUCK"
 
+def print_ports(list):
+    for i in list:
+        for j in i:
+            print j[0].dport
 
-def search_for_scans(srch_list, rslt_list, w, n):
-    k = 0
-    while k < len(srch_list)-2:
-        i = k
-        j = i+1
-        while (i < len(srch_list)-2 and j < len(srch_list)-1 and \
-            srch_list[i].dport+w>=srch_list[j].dport):
-            i = j
-            j = j+1
-        if(j-k>=n):
-            rslt_list.append(srch_list[k:j+1])
-        k = j+1
+def print_times(list):
+    for i in list:
+        print i[1]
 
+def print_port_hashes(list):
+    for i in list:
+        print i[0][0].dport
 
 def main():
     # parse all the arguments to the client
@@ -85,9 +77,6 @@ def main():
     udp_time_list = []
     udp_port_list = []
 
-    port_insert.count = 0
-    count = 0
-
     for timestamp, packet in input_data:
         # this converts the packet arrival time in unix timestamp format
         # to a printable-string
@@ -102,34 +91,34 @@ def main():
 
         if ip.p==dpkt.ip.IP_PROTO_TCP:
             tcp = ip.data
-            tcp_tuple = (timestamp, tcp)
-            time_insert(tcp_tuple, tcp_time_list)
-            port_insert(tcp, tcp_port_list)
+            #print tcp.dport
+            tcp_tuple = (tcp, time_string)
+            tcp_time_list.append(tcp_tuple)
+            insert_port_list(tcp_tuple, tcp_port_list)
 
         elif ip.p==dpkt.ip.IP_PROTO_UDP:
             udp = ip.data
-            udp_tuple = (timestamp, udp)
-            time_insert(udp_tuple, udp_time_list)
-            port_insert(udp, udp_port_list)
+            #print udp.dport
+            udp_tuple = (udp, time_string)
+            udp_time_list.append(udp_tuple)
+            insert_port_list(udp_tuple, udp_port_list)
 
+            
         else:
             print "Bad packet"  
 
-        count += 1
-    
-    print "==========================="
-    print "pakcets skipped:\t" +  str(port_insert.count)
-    print "# of tcp time packets:\t" + str(len(tcp_time_list))
-    print "# of tcp port packets:\t" + str(len(tcp_port_list))
-    print "# of udp time packets:\t" + str(len(udp_time_list))
-    print "# of udp port packets:\t" + str(len(udp_port_list))
-    #print count
-    
-    tcp_scans = []
-    
-    search_for_scans(tcp_port_list, tcp_scans, W_s, N_s)
+    print_times(tcp_time_list)
+    print_ports(tcp_port_list)
+    print_times(udp_time_list)
+    print_ports(udp_port_list)
+    print len(tcp_port_list)
+    print len(tcp_time_list)
+    print len(udp_port_list)
+    print len(udp_time_list)
+    #print
+   # print_port_hashes(tcp_port_list)
 
-    print len(tcp_scans)
+
 
 # execute a main function in Python
 if __name__ == "__main__":
